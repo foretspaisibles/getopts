@@ -1,15 +1,15 @@
 (* Getopts -- Program arguments analysis
 
-Author: Michael Grünewald
-Date: Sun  4 May 2008 11:08:10 CEST
+   Author: Michael Grünewald
+   Date: Sun  4 May 2008 11:08:10 CEST
 
-Copyright © 2008-2015 Michael Grünewald
+   Copyright © 2008-2015 Michael Grünewald
 
-This file must be used under the terms of the CeCILL-B.
-This source file is licensed as described in the file COPYING, which
-you should have received as part of this distribution. The terms
-are also available at
-http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt *)
+   This file must be used under the terms of the CeCILL-B.
+   This source file is licensed as described in the file COPYING, which
+   you should have received as part of this distribution. The terms
+   are also available at
+   http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt *)
 open Printf
 
 let buffer_sz = 100		(* Size of buffers holding argument options *)
@@ -49,18 +49,18 @@ let error_convert_long c name opt mesg =
 (* Analyse of the command line *)
 
 type token =
-| Flag of char
-| Option of char * string
-| Rest of string
+  | Flag of char
+  | Option of char * string
+  | Rest of string
 
 (* A word stream is a list of character options, representing words
-separated by [None] .*)
+   separated by [None] .*)
 
 (* Convert a vector of string to a wordstream. *)
 let wordstream_of_argv argv =
   let string_to_list s =
     Array.init (String.length s) (String.get s)
-      |> Array.to_list
+    |> Array.to_list
   in
   let rec flatten wordlist =
     let embed lst =
@@ -73,8 +73,8 @@ let wordstream_of_argv argv =
   in
   let streamdata =
     Array.to_list argv
-      |> List.map string_to_list
-      |> flatten
+    |> List.map string_to_list
+    |> flatten
   in
   Stream.of_list streamdata
 
@@ -84,16 +84,16 @@ let wordstream_readword buffer stream =
   begin
     (try
        while true do match Stream.next stream with
-       | Some c -> Buffer.add_char buffer c
-       | None -> raise Exit
+         | Some c -> Buffer.add_char buffer c
+         | None -> raise Exit
        done
      with
      | Exit -> ()
      | Stream.Failure -> ());
     let answer = Buffer.contents buffer in
     begin
-	Buffer.clear buffer;
-	answer
+      Buffer.clear buffer;
+      answer
     end
   end
 
@@ -184,8 +184,8 @@ let supervise_convert_short c reader s =
   | Invalid_argument(mesg)
   | Failure(mesg) -> error_convert_short c s mesg
   | _ -> failwith "Getopts.supervise_convert_short"
-  (* It is not permitted to reader to throw something other than a
-     failure or an invalid argument. *)
+(* It is not permitted to reader to throw something other than a
+   failure or an invalid argument. *)
 
 let flag c cb descr = {
   option = c;
@@ -307,7 +307,7 @@ struct
       | '[' -> usage_open_bracket ()
       | ']' -> usage_close_bracket ()
       | c -> print_char c
-      done
+    done
 
   let compose_usage usage description =
     usage_open ();
@@ -391,8 +391,8 @@ struct
   let set predicate lst =
     let buf = Buffer.create buffer_sz in
     List.filter predicate lst
-      |> List.map (fun x -> x.option)
-      |> List.iter (Buffer.add_char buf);
+    |> List.map (fun x -> x.option)
+    |> List.iter (Buffer.add_char buf);
     Buffer.contents buf
 
   let flags lst =
@@ -460,8 +460,8 @@ let supervise_convert_long name reader s =
   | Invalid_argument(mesg)
   | Failure(mesg) -> error_convert_long '?' name mesg s
   | _ -> failwith "Getopts.supervise_convert_long"
-  (* It is not permitted to reader to throw something other than a
-     failure or an invalid argument. *)
+(* It is not permitted to reader to throw something other than a
+   failure or an invalid argument. *)
 
 let long_flag name cb = {
   long_option = name;
@@ -519,10 +519,10 @@ let long_option_callback o f s =
     m.long_callback ""
 
 let long o c d = {
-    option = o;
-    callback = long_option_callback o c;
-    help = d;
-    wants_arg = true;
+  option = o;
+  callback = long_option_callback o c;
+  help = d;
+  wants_arg = true;
 }
 
 
