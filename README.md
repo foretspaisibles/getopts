@@ -3,6 +3,8 @@
 The **Getopts** projects implements a library to analyse command line
 arguments in OCaml programs.
 
+[![Build Status](https://travis-ci.org/michipili/getopts.svg?branch=master)](https://travis-ci.org/michipili/getopts?branch=master)
+
 It support traditional short options, option clusters, and also long
 options introduced by a special letter, similar to what **gcc** or
 **clang** proposes.
