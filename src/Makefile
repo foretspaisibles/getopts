@@ -1,7 +1,7 @@
-### Makefile -- Test suite
+### Makefile -- Analyse command line arguments
 
 # Author: Michael Grünewald
-# Date: Tue Nov  5 22:54:56 CET 2013
+# Date: Sat Dec 28 13:07:19 CET 2013
 
 # Getopts (https://github.com/michipili/getopts)
 # This file is part of Getopts
@@ -14,12 +14,10 @@
 # are also available at
 # http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt
 
-SUBDIR+=	unit-testing
-SUBDIR+=	trip-trap
+LIBRARY=		getopts
 
-install:
-	${NOP}
+SRCS+=			getopts.ml
 
-.include "generic.subdir.mk"
+.include "ocaml.lib.mk"
 
 ### End of file `Makefile'

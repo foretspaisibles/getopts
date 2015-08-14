@@ -3,10 +3,10 @@
 # Author: Michael Grünewald
 # Date: Mon Apr 14 23:52:37 CEST 2014
 
-# GIT-Toolkit (https://github.com/michipili/gasoline)
-# This file is part of Gasoline
+# Getopts (https://github.com/michipili/getopts)
+# This file is part of Getopts
 #
-# Copyright © 2014 Michael Grünewald
+# Copyright © 2008-2015 Michael Grünewald
 #
 # This file must be used under the terms of the CeCILL-B.
 # This source file is licensed as described in the file COPYING, which
@@ -14,20 +14,18 @@
 # are also available at
 # http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt
 
-SRCS+=		testUnitTest.ml
-SRCS+=		testUnicode.ml
-SRCS+=		testCTypeValue.ml
-SRCS+=		testConfigurationMap.ml
+PROGRAM=	unit_testing
 
 SRCS+=		main.ml
 
-PKGS+=		unix
-
 OCAMLLFLAGS+=	-linkall
 
-test: all
-	./unit-testing
+test: ${PROGRAM}
+	${PROGRAM:tA}
 
-.include "gasoline.program.mk"
+install:
+	${NOP}
+
+.include "ocaml.prog.mk"
 
 ### End of file `Makefile'

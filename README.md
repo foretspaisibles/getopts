@@ -1,61 +1,101 @@
-# Gasoline
+# Getopts, analysing command line arguments for OCaml
 
-The Gasoline project aims at implementing a Unix-ish application
-development framework for OCaml.  The framework will provide
-application templates factoring application components bootstrapping,
-configuration analyse and offering homogeneous diagnostic facilities.
+The **Getopts** projects implements a library to analyse command line
+arguments in OCaml programs.
 
-It is written by Michael Grünewald and is distributed under the
-[CeCILL-B][1] license agreement.
-
-Users of Gasoline should be enabled to:
-
-- Rapidly develop applications by using *application patterns* such as
-  “Unix filter”, “tabular data processor” or “compiler”.
-- Write large software suites whose elements offer homogeneous
-  interfaces.
-- Use standardised diagnostic facilities supporting
-  internationalisation.
-- Cleanly distinguish between application components and lower-level
-  software engineering artifacts.
-- Easily bootstrap and shutdown applications consisting of many
-  modules.
-- Use common file formats such as CSV or JSON in their applications.
+It support traditional short options, option clusters, and also long
+options introduced by a special letter, similar to what **gcc** or
+**clang** proposes.
 
 
-## Current state
+## Option clusters
 
-Gasoline is still beta-software, and many features or design elements
-are susceptible to change before we reach version 1.0. Current
-features are:
+The **Getopts** module support option clusters, meaning that if `-a`
+is a command flag and `-o` and option with an argument, all the
+invocations
 
-- A [diagnostic facility][2] similar to `printf` but better suited to
-  internationalisation and having routing rules.
-- [Configuration][3] based on files, environment variables and command
-  line arguments.
-- Configuration [cascading rules][4] which can be used to let system
-  administrators enforce some settings of installed applications.
-- Software [component management][5] which correctly bootstrap and
-  shutdown the application, exception sent by the guest are caught and
-  an emergency shutdown procedure is triggered.
-- A [unit test][9] suite.
+    cmd -aoarg file file
+    cmd -a -o arg file file
+    cmd -a -oarg file file
 
-Applications can take advantage of a [simplified interface][6] to the
-[Camomile library][7] and of writer functions, allowing to
-produce simple SGML or HTML reports.
+are interpreted the same way.
 
-See the [ocamldoc generated documentation][8] of the `master` branch
-for more details.
+
+## Option delimiter
+
+The **Getopts** module uses `--` as an option delimiter, meaning that
+meaning that if `-a` is a command flag and `-o` and option with an
+argument then the invocations
+
+    cmd -a -oarg -- file file
+    cmd -a -oarg file file
+
+are equivalent.
+
+
+## Options with long names
+
+GNU style long options are not supported but it is possible to use
+something similar to an option with a long name, in a similar way as
+**gcc** or **clang** does. It is possible to configure **Getopts** so
+that invocations like
+
+    cmd -fsyntax-only -fobjc-abi-version=2 -March=hammer
+    cmd -f syntax-only -f objc-abi-version=2 -M arch=hammer
+
+are easily analysed.
+
+
+## Help screen
+
+The **Getopts** module can automatically prepare and format an help
+screen, similar to this one:
+
+    Usage: test_getopts [-avh][-i int][-f float][-b bool][-s string][--][rest]
+     Test the Getopts module
+    Options:
+     -h Display available options.
+     -a The a flag.
+     -v The v flag.
+     -b The b option.
+     -c The c option.
+     -s The s option.
+     -i The i option.
+     -f The f option.
+    Short Note: This is an example of a short note.
+    Long Note:
+     This is an example of a very long note whose contents spans over several
+     lines.  It really has to be that long, so we will write here as much silly
+     text as needed.
+       And we also need several pragraphs of irrelevant text, but believe me,
+     this has nothing to do with you, just with the example.
+
+
+## Free software
+
+It is written by Michael Grünewald and is distributed as a free
+software: copying it  and redistributing it is
+very much welcome under conditions of the [CeCILL-B][licence-url]
+licence agreement, found in the [COPYING][licence-en] and
+[COPYING-FR][licence-fr] files of the distribution.
 
 
 ## Setup guide
 
+It is easy to install **Getopts** using **opam** and its *pinning*
+feature.  In a shell visiting the repository, say
+
+```console
+% opam pin add getopts .
+```
+
+It is also possible to install **Getopts** manually.
 The installation procedure is based on the portable build system
-[bsdowl][10] based on BSD Make.
+[BSD Owl Scripts][bsdowl-home] written for BSD Make.
 
 1. Verify that prerequisites are installed:
    - BSD Make
-   - [BSD OWl][11]
+   - [BSD OWl][bsdowl-install]
    - OCaml
    - GNU Autoconf
 
@@ -74,24 +114,22 @@ The installation procedure is based on the portable build system
 
 7. Finally run `make install`.
 
-Depending on how BSD Make is called on your system, you may need to
-replace `make` by `bsdmake` or `bmake` in steps 5, 6, and 7.  The GNU
-Make program usually give up the ghost, croaking `*** missing
-separator. Stop.`
+Depending on how **BSD Make** is called on your system, you may need to
+replace `make` by `bsdmake` or `bmake` in steps 5, 6, and 7.
+The **GNU Make** program usually give up the ghost, croaking
+`*** missing separator. Stop.` when you mistakingly use it instead of
+**BSD Make**.
 
 Step 7 requires that you can `su -` if you are not already `root`.
 
 
 Michael Grünewald in Bonn, on October 21, 2014
 
-   [1]: http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
-   [2]: http://github.com/michipili/gasoline/wiki/DiagnosticFacility
-   [3]: http://github.com/michipili/gasoline/wiki/Configuration
-   [4]: https://github.com/michipili/gasoline/wiki/Configuration#configuration-cascade
-   [5]: http://github.com/michipili/gasoline/wiki/Component
-   [6]: http://michipili.github.io/gasoline/reference/Unicode.html
-   [7]: https://github.com/yoriyuki/Camomile
-   [8]: http://michipili.github.io/gasoline/reference/index.html
-   [9]: http://github.com/michipili/gasoline/wiki/UnitTesting
-   [10]: https://github.com/michipili/bsdowl
-   [11]: https://github.com/michipili/bsdowl/wiki/Install
+
+  [licence-url]:        http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
+  [licence-en]:         COPYING
+  [licence-fr]:         COPYING-FR
+  [bsdowl-home]:        https://github.com/michipili/bsdowl
+  [bsdowl-install]:     https://github.com/michipili/bsdowl/wiki/Install
+  [mixture-home]:       https://github.com/michipili/mixture
+  [mixture-test]:       https://github.com/michipili/mixture

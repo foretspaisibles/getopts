@@ -1,0 +1,5 @@
+name="getopts"
+version="@version@"
+description="Analyse command line arguments"
+archive(byte) = "getopts.cma"
+archive(native) = "getopts.cmxa"
