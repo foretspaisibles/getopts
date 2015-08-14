@@ -12,17 +12,17 @@
    http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt *)
 open Printf
 
-let buffer_sz = 100		(* Size of buffers holding argument options *)
-
 let progname () =
   Filename.basename Sys.executable_name
 
-exception Error of string
+module Success =
+  Lemonade_Success.Make(String)
+
 
 (* Error messages *)
 
 let error fmt =
-  ksprintf (fun s -> raise(Error(s))) fmt
+  ksprintf Success.throw fmt
 
 let error_illegal_short c =
   error "illegal option -- %s" (Char.escaped c)
@@ -48,117 +48,134 @@ let error_convert_long c name opt mesg =
 
 (* Analyse of the command line *)
 
-type token =
-  | Flag of char
-  | Option of char * string
-  | Rest of string
+module Parser =
+struct
+  type token =
+    | Flag of char
+    | Option of char * string
+    | Rest of string
 
-(* A word stream is a list of character options, representing words
-   separated by [None] .*)
-
-(* Convert a vector of string to a wordstream. *)
-let wordstream_of_argv argv =
   let string_to_list s =
     Array.init (String.length s) (String.get s)
     |> Array.to_list
-  in
-  let rec flatten wordlist =
-    let embed lst =
-      List.map (fun x -> Some(x)) lst
+
+  let string_of_list lst =
+    let a = Array.of_list lst in
+    String.init (Array.length a) (Array.get a)
+
+  let wordlist_of_argv argv =
+    let rec flatten wordlist =
+      let embed lst =
+        List.map (fun x -> Some(x)) lst
+      in
+      match wordlist with
+      | w1 :: w2 :: t -> (embed w1)@(None::flatten(w2::t))
+      | w :: [] -> embed w
+      | [] -> []
     in
-    match wordlist with
-    | w1 :: w2 :: t -> (embed w1)@(None::flatten(w2::t))
-    | w :: [] -> embed w
-    | [] -> []
-  in
-  let streamdata =
-    Array.to_list argv
-    |> List.map string_to_list
-    |> flatten
-  in
-  Stream.of_list streamdata
+    let streamdata =
+      Array.to_list argv
+      |> List.map string_to_list
+      |> flatten
+    in
+    streamdata
 
-(* Read the stream until the next gap represented by [None]
-   or the end of the stream. *)
-let wordstream_readword buffer stream =
-  begin
-    (try
-       while true do match Stream.next stream with
-         | Some c -> Buffer.add_char buffer c
-         | None -> raise Exit
-       done
-     with
-     | Exit -> ()
-     | Stream.Failure -> ());
-    let answer = Buffer.contents buffer in
-    begin
-      Buffer.clear buffer;
-      answer
-    end
-  end
+  (* Read the word list until the next gap represented by [None]
+     or the end of the stream. *)
+  let rec wordlist_readword buffer words =
+    match words with
+    | [] -> (string_of_list (List.rev buffer), [])
+    | None :: tl -> (string_of_list (List.rev buffer), tl)
+    | Some c :: tl -> wordlist_readword (c :: buffer) tl
 
-let wordstream_is_empty stream =
-  Stream.peek stream = None
+  type state = {
+    stream: char option list;
+    buffer: char list;
+    answer: token list;
+  }
 
-let argv_parser flags options argv =
-  let stream = wordstream_of_argv argv in
-  let buffer = Buffer.create buffer_sz in
-  let answer = ref [] in
-  let is_flag c = String.contains flags c in
-  let is_option c = String.contains options c in
-  let pack_flag c = answer := !answer @ [Flag(c)] in
-  let pack_option c arg = answer := !answer @ [Option(c,arg)] in
-  let pack_rest s =  answer := !answer @ [Rest(s)] in
-  let slurp () = wordstream_readword buffer stream in
-  let rec maybe_read_cluster () =
-    match Stream.next stream with
-    | Some('-') -> read_cluster_enter ()
-    | Some(c) -> (Buffer.add_char buffer c; read_trail())
-    | None -> maybe_read_cluster ()
-  and read_trail () =
-    (pack_rest(slurp()); read_rest ())
-  and read_rest () =
-    if wordstream_is_empty stream then () else read_trail ()
-  and read_cluster_enter () =
-    match Stream.next stream with
-    | None -> (pack_rest "-"; read_rest ())
-    | Some('-') -> read_end_of_separator ()
-    | Some(c) -> read_cluster_option c
-  and read_cluster_continue () =
-    match Stream.next stream with
-    | None -> maybe_read_cluster ()
-    | Some('-') -> (pack_rest "-"; read_rest())
-    | Some(c) -> read_cluster_option c
-  and read_cluster_option c =
-    if is_flag c then
-      (pack_flag c; read_cluster_continue())
-    else if is_option c then
-      read_option_argument c
-    else
-      error_illegal_short c
-  and read_option_argument c =
-    if wordstream_is_empty stream then
-      error_argument_short c
-    else begin
-      if Stream.peek stream = Some(None) then Stream.junk stream;
-      (pack_option c (slurp()); maybe_read_cluster())
-    end
-  and read_end_of_separator () =
-    if Stream.peek stream = Some(None) then
-      (Stream.junk stream; read_rest ())
-    else
-      error_separator ()
-  in
-  ( try maybe_read_cluster () with Stream.Failure -> ());
-  !answer
+  let pack_flag c state =
+    Success.return { state with answer = Flag(c) :: state.answer }
 
+  let pack_option c (arg, state) =
+    Success.return { state with answer = Option(c, arg) :: state.answer }
 
-(* Traditional flags and options *)
+  let pack_rest (s, state) =
+    Success.return { state with answer = Rest(s) :: state.answer }
 
-type t = {
+  let add c state =
+    Success.return { state with buffer = c :: state.buffer }
+
+  let junk state =
+    match state.stream with
+    | _ :: tl -> Success.return({ state with stream = tl })
+    | [] -> Success.throw "Getopts.Parser.junk"
+
+  let slurp state =
+    let word, stream = wordlist_readword state.buffer state.stream in
+    Success.return (word, { state with buffer = []; stream })
+
+  let argv_parser : string -> string -> string array ->
+    (token list) Success.t =
+    fun flags options argv ->
+      let open Success.Infix in
+      let is_flag c = String.contains flags c in
+      let is_option c = String.contains options c in
+      let rec maybe_read_cluster state =
+        match state.stream with
+        | Some('-') :: _ -> junk state >>= read_cluster_enter
+        | Some(c) :: _ -> junk state >>= add c >>= read_trail
+        | None :: _ -> junk state >>= maybe_read_cluster
+        | [] -> Success.return state
+      and read_trail state =
+        slurp state >>= pack_rest >>= read_rest
+      and read_rest state =
+        match state.stream with
+        | [] -> Success.return state
+        | _ -> read_trail state
+      and read_cluster_enter state =
+        match state.stream with
+        | None :: _ -> pack_rest("-", state) >>= junk >>= read_rest
+        | Some('-') :: _ -> junk state >>= read_end_of_separator
+        | Some(c) :: _ -> junk state >>= read_cluster_option c
+        | [] -> pack_rest("-", state)
+      and read_cluster_continue state =
+        match state.stream with
+        | None :: _ -> junk state >>= maybe_read_cluster
+        | Some('-') :: _ -> pack_rest("-", state) >>= junk >>= read_rest
+        | Some(c) :: _ -> junk state >>= read_cluster_option c
+        | [] -> Success.return state
+      and read_cluster_option c state =
+        if is_flag c then
+          pack_flag c state >>= read_cluster_continue
+        else if is_option c then
+          read_option_argument c state
+        else
+          error_illegal_short c
+      and read_option_argument c state =
+        match state.stream with
+        | [] -> error_argument_short c
+        | None :: tl -> junk state >>= read_option_argument c
+        | _ -> slurp state >>= pack_option c >>= maybe_read_cluster
+      and read_end_of_separator state =
+        match state.stream with
+        | None :: _ -> junk state >>= read_rest
+        | [] -> Success.return state
+        | _ -> error_separator ()
+      in
+      maybe_read_cluster {
+        stream = wordlist_of_argv argv;
+        buffer = [];
+        answer = [];
+      } >>= (fun state -> Success.return(List.rev state.answer))
+end
+
+  (* Traditional flags and options *)
+
+type 'a t = {
   option: char;
   help: string;
-  callback: string -> unit;
+  edit: string -> ('a -> 'a) Success.t;
   wants_arg: bool;
 }
 
@@ -167,37 +184,42 @@ type note = {
   content: string;
 }
 
-type spec = {
+type 'a spec = {
   usage: string;
   description: string;
-  options: t list;
-  rest: string -> unit;
+  options: 'a t list;
+  rest: string -> 'a -> 'a;
   notes: note list;
 }
 
-type 'a reader =
-  string -> 'a
+let xmap get set option =
+  let open Success.Infix in
+  let edit s =
+    option.edit s
+    >>= fun inner_edit ->
+    Success.return(fun x -> (set @@ inner_edit @@ get @@ x) x)
+  in { option with edit }
 
-let supervise_convert_short c reader s =
-  try reader s
+let convert_short c of_string s =
+  try Success.return(of_string s)
   with
   | Invalid_argument(mesg)
   | Failure(mesg) -> error_convert_short c s mesg
-  | _ -> failwith "Getopts.supervise_convert_short"
-(* It is not permitted to reader to throw something other than a
+  | _ -> Success.throw "Getopts.convert_short"
+(* It is not permitted to of_string to throw something other than a
    failure or an invalid argument. *)
 
-let flag c cb descr = {
-  option = c;
-  help = descr;
-  callback = (fun _ ->  cb ());
+let flag option edit0 help = {
+  option;
+  help;
+  edit = (fun _ -> Success.return(edit0));
   wants_arg = false;
 }
 
-let concrete reader c cb descr = {
+let option of_string c edit0 help = {
   option = c;
-  help = descr;
-  callback = (fun s -> cb (supervise_convert_short c reader s));
+  help;
+  edit = (fun s -> Success.Infix.(edit0 <$> convert_short c of_string s));
   wants_arg = true;
 }
 
@@ -207,20 +229,20 @@ let char_of_string s =
   else
     s.[0]
 
-let char =
-  concrete char_of_string
+let char x =
+  option char_of_string x
 
-let bool =
-  concrete bool_of_string
+let bool x =
+  option bool_of_string x
 
-let string =
-  concrete (function x -> x)
+let string x =
+  option (function x -> x) x
 
-let int =
-  concrete int_of_string
+let int x =
+  option int_of_string x
 
-let float =
-  concrete float_of_string
+let float x =
+  option float_of_string x
 
 let note title content = {
   title;
@@ -376,45 +398,49 @@ end
 module OptionList =
 struct
 
-  let has_option c x =
+  let _option_has_char c x =
     x.option = c
 
   let is_option lst c =
-    List.exists (has_option c) lst
+    List.exists (_option_has_char c) lst
 
-  let wants_arg lst c =
-    (List.find (has_option c) lst).wants_arg
+  let _lookup lst c =
+    try Success.return (List.find (_option_has_char c) lst).edit
+    with Not_found -> error_illegal_short c
 
-  let callback lst c =
-    (List.find (has_option c) lst).callback
+  let edit spec tok =
+    let open Success.Infix in
+    let open Parser in
+    match tok with
+    | Flag(c) -> (_lookup spec.options c) >>= (fun f -> f "")
+    | Option(c, optarg) -> (_lookup spec.options c) >>= (fun f -> f optarg)
+    | Rest(s) -> Success.return(spec.rest s)
 
-  let set predicate lst =
-    let buf = Buffer.create buffer_sz in
+  let _set predicate lst =
     List.filter predicate lst
     |> List.map (fun x -> x.option)
-    |> List.iter (Buffer.add_char buf);
-    Buffer.contents buf
+    |> Array.of_list
+    |> (fun x -> String.init (Array.length x) (Array.get x))
 
   let flags lst =
-    set (fun x -> not(x.wants_arg)) lst
+    _set (fun x -> not(x.wants_arg)) lst
 
   let options lst =
-    set (fun x -> x.wants_arg) lst
+    _set (fun x -> x.wants_arg) lst
 end
-
-let help_callback =
-  ref (fun () -> failwith "Getopts.help_callback")
 
 let help_flag = {
   option = 'h';
   wants_arg = false;
   help = "Display available options.";
-  callback = fun _ -> !help_callback ();
+  edit = (fun _ -> Success.throw "")
 }
 
 let maybe_add_help spec =
-  if OptionList.is_option spec.options 'h'
-  then spec else { spec with options = help_flag :: spec.options }
+  if OptionList.is_option spec.options 'h' then
+    spec
+  else
+    { spec with options = help_flag :: spec.options }
 
 let help spec =
   Message.help spec;
@@ -425,103 +451,109 @@ let usage spec mesg =
   Message.usage spec;
   exit 64 (* See sysexits(3) *)
 
-let apply spec tok =
-  match tok with
-  | Flag(c) -> (OptionList.callback spec.options c) ""
-  | Option(c, optarg) -> (OptionList.callback spec.options c) optarg
-  | Rest(s) -> spec.rest s
 
-let parse spec0 argv =
+let parse argv spec0 default =
+  let open Success.Infix in
   let spec = maybe_add_help spec0 in
-  let flags = OptionList.flags spec.options in
-  let options = OptionList.options spec.options in
-  try
-    help_callback := (fun () -> help spec);
-    List.iter (apply spec) (argv_parser flags options argv)
-  with
-  | Error(mesg) -> usage spec mesg
+  let compose lst =
+    List.fold_left ( |> ) default lst
+  in
+  let success =
+    (Parser.argv_parser
+       (OptionList.flags spec.options)
+       (OptionList.options spec.options)
+       argv)
+    >>= (fun lst -> (Success.dist(List.map (OptionList.edit spec) lst)))
+    >>= (fun lst -> (Success.return (compose lst)))
+  in
+  match Success.run success with
+  | Success.Success(param) -> param
+  | Success.Error("") -> help spec
+  | Success.Error(mesg) -> usage spec mesg
 
-let parse_argv spec =
-  let argv = Array.sub Sys.argv 1 (Array.length Sys.argv - 1) in
-  parse spec argv
+let parse_argv spec default =
+  let argv = Array.sub Sys.argv 1 (pred @@ Array.length @@ Sys.argv) in
+  parse argv spec default
 
 
 (* Long options *)
 
-type long_option = {
+type 'a _long_option = {
+  long_short: char;
   long_option: string;
-  long_callback: string -> unit;
+  long_edit: string -> ('a -> 'a) Success.t;
   long_wants_arg: bool;
-}
+} and 'a long_option = (char -> 'a _long_option)
 
-let supervise_convert_long name reader s =
-  try reader s
+let convert_long c name of_string s =
+  try Success.return(of_string s)
   with
   | Invalid_argument(mesg)
-  | Failure(mesg) -> error_convert_long '?' name mesg s
-  | _ -> failwith "Getopts.supervise_convert_long"
-(* It is not permitted to reader to throw something other than a
+  | Failure(mesg) -> error_convert_long c name mesg s
+  | _ -> Success.throw "Getopts.supervise_convert_long"
+(* It is not permitted to of_string to throw something other than a
    failure or an invalid argument. *)
 
-let long_flag name cb = {
+let long_flag name edit c = {
+  long_short = c;
   long_option = name;
-  long_callback = (function _ -> cb ());
+  long_edit = (function _ -> Success.return edit);
   long_wants_arg = false;
 }
 
-let long_concrete reader name cb = {
+let long_option of_string name edit c = {
+  long_short = c;
   long_option = name;
-  long_callback = (fun s -> cb (supervise_convert_long name reader s));
+  long_edit =
+    (fun s -> Success.Infix.(edit <$> convert_long c name of_string s));
   long_wants_arg = true;
 }
 
-let long_char =
-  long_concrete char_of_string
+let long_char x =
+  long_option char_of_string x
 
-let long_bool =
-  long_concrete bool_of_string
+let long_bool x =
+  long_option bool_of_string x
 
-let long_string =
-  long_concrete (fun x -> x)
+let long_string x =
+  long_option (fun x -> x) x
 
-let long_int =
-  long_concrete int_of_string
+let long_int x =
+  long_option int_of_string x
 
-let long_float =
-  long_concrete float_of_string
+let long_float x =
+  long_option float_of_string x
 
 let long_option_get_name s =
-  try String.sub s 0 (String.index s '=')
-  with Not_found -> s
+  Success.return
+    (try String.sub s 0 (String.index s '=')
+     with Not_found -> s)
 
-let long_option_has_name n x =
-  n = x.long_option
+let long_option_get_optarg opt name s =
+  try
+    let l = String.length s in
+    let i = String.index s '=' in
+    Success.return(String.sub s (i+1) (l-i-1))
+  with Not_found -> error_argument_long opt name
 
-let long_option_callback o f s =
-  let l = String.length s in
-  let n = long_option_get_name s in
-  let m =
-    try List.find (long_option_has_name n) f
-    with Not_found -> error_illegal_long o n
-  in
+let long_option_lookup opt lst name =
+  try Success.return(List.find (fun x -> name = x.long_option) lst)
+  with Not_found ->  error_illegal_long opt name
+
+let long_option_edit opt lst s =
+  let open Success.Infix in
+  long_option_get_name s
+  >>= long_option_lookup opt lst
+  >>= fun m ->
   if m.long_wants_arg then
-    let i =
-      try String.index s '='
-      with Not_found -> error_argument_long o n
-    in
-    let a = String.sub s (i+1) (l-i-1) in
-    try m.long_callback a
-    with Error(mesg) -> ( let i = String.index mesg '?' in
-                          let m = Bytes.of_string mesg in
-                          Bytes.set m i o;
-                          raise(Error(Bytes.to_string mesg)))
+    long_option_get_optarg opt m.long_option s >>= m.long_edit
   else
-    m.long_callback ""
+    m.long_edit ""
 
-let long o c d = {
-  option = o;
-  callback = long_option_callback o c;
-  help = d;
+let long opt lst descr = {
+  option = opt;
+  edit = long_option_edit opt (List.map ((|>) opt) lst);
+  help = descr;
   wants_arg = true;
 }
 
@@ -534,5 +566,5 @@ let store r v =
 let set v r () =
   r := v
 
-let queue a v =
+let queue a v () =
   a := !a @ [v]

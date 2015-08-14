@@ -26,15 +26,15 @@ let spec = Getopts.spec
     Getopts.flag 'v'
       (fun () -> printf "flag v\n") "The v flag.";
     Getopts.bool 'b'
-      (fun b -> printf "option b = %B\n" b) "The b option.";
+      (fun b () -> printf "option b = %B\n" b) "The b option.";
     Getopts.char 'c'
-      (fun c -> printf "option c = %C\n" c) "The c option.";
+      (fun c () -> printf "option c = %C\n" c) "The c option.";
     Getopts.string 's'
-      (fun s -> printf "option s = %S\n" s) "The s option.";
+      (fun s () -> printf "option s = %S\n" s) "The s option.";
     Getopts.int 'i'
-      (fun x -> printf "option i = %d\n" x) "The i option.";
+      (fun x () -> printf "option i = %d\n" x) "The i option.";
     Getopts.float 'f'
-      (fun x -> printf "option f = %f\n" x) "The f option.";
+      (fun x () -> printf "option f = %f\n" x) "The f option.";
   ] (Getopts.queue rest) [
     Getopts.note "Short Note"
       "This is an example of a short note.";
@@ -48,6 +48,6 @@ let spec = Getopts.spec
 
 let () =
   begin
-    Getopts.parse_argv spec;
+    Getopts.parse_argv spec ();
     List.iter (fun s -> printf "rest = %S\n" s) !rest
   end

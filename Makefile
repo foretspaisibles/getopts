@@ -25,6 +25,7 @@ MODULE+=		ocaml.manual:manual
 SUBDIR=			testsuite
 
 EXTERNAL=		ocaml.findlib:broken
+EXTERNAL+=		ocaml.findlib:lemonade
 
 CONFIGURE=		meta/getopts.in
 CONFIGURE+=		Makefile.config.in

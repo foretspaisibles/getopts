@@ -61,51 +61,57 @@
 
 (** {6 Traditional flags and options} *)
 
-type t
-(** {e That getopts thingie} [t] represents a flag or an option.
+type 'a t
+(** {e That getopts thingie} [t] represents a flag or an option
+    functionally modifying a value of type ['a].
 
     Values of this type are created by the functions
     [flag], [char], [bool], [string], [int] and [float] hereafter, their
     variants [set_flag], [set_char], [set_bool], [set_string], [set_int]
     and [set_float], and the [long] forging long options. *)
 
-type 'a reader = string -> 'a
-(** The type of functions converting [string] to ['a].  Such a
+val xmap : ('a -> 'b) -> ('b -> 'a -> 'a) -> 'b t -> 'a t
+(** [xmap get set option] convert an option functionally modifying a
+    value of type ['b] in an option functionally modifying a value of type
+    ['b].  This can be used in conjunction with lenses to separately
+    configure the different modules of an application. *)
+
+val option : (string -> 'a)  -> char -> ('a -> 'b -> 'b) -> string -> 'b t
+(** [option of_string c edit d] constructs a [t] that handles the
+    option denoted by [c]. This options has a ['a] value as argument
+    converted from the given string by [of_string].  When this option
+    occurs in the command line, the function [edit] is used to
+    functionally edit program parameters. The message [d] may be
+    displayed in the help screen of the program.
+
+    The [of_string]
     function can raise [Failure] (preferred) or [Invalid_arg] to indicate
     an ill-formed input. *)
 
-val flag : char -> (unit -> unit) -> string -> t
-(** [char c f d] constructs a [t] that handles the flag denoted by
-    [c]. When this flag occurs in the command line, the callback [f] is
-    called. The message [d] may be displayed in the
-    help screen of the program. *)
-
-val char : char -> (char -> unit) -> string -> t
-(** [char c f d] constructs a [t] that handles the option denoted by
-    [c]. This options has a [char] value as argument. When this option
-    occurs in the command line, the callback [f] is called on the option
-    argument. The message [d] may be displayed in the help screen of the
-    program. *)
-
-val bool : char -> (bool -> unit) -> string -> t
-(** Similar to [char] for boolean values. *)
-
-val string : char -> (string -> unit) -> string -> t
-(** Similar to [char] for string values. *)
-
-val int : char -> (int -> unit) -> string -> t
-(** Similar to [char] for integer values. *)
-
-val float : char -> (float -> unit) -> string -> t
-(** Similar to [char] for floating point values. *)
-
-val concrete : 'a reader -> char -> ('a -> unit) -> string -> t
-(** [concrete conc c f d] constructs a [t] that handles the option
-    denoted by [c]. This options has a ['a] value as argument converted
-    from the given string by [conc].  When this option occurs in the
-    command line, the callback [f] is called on the option argument. The
+val flag : char -> ('b -> 'b) -> string -> 'b t
+(** [char c edit d] constructs a [t] that handles the flag denoted by
+    [c]. When this flag occurs in the command line, the function
+    [edit] is used to functionally edit the program parameters. The
     message [d] may be displayed in the help screen of the program. *)
 
+val char : char -> (char -> 'b -> 'b) -> string -> 'b t
+(** [char c f d] constructs a [t] that handles the option denoted by
+    [c]. This options has a [char] value as argument. When this option
+    occurs in the command line, the function [edit] is used to
+    functionally edit program parameters. The message [d] may be
+    displayed in the help screen of the program. *)
+
+val bool : char -> (bool -> 'b -> 'b) -> string -> 'b t
+(** Similar to [char] for boolean values. *)
+
+val string : char -> (string -> 'b -> 'b) -> string -> 'b t
+(** Similar to [char] for string values. *)
+
+val int : char -> (int -> 'b -> 'b) -> string -> 'b t
+(** Similar to [char] for integer values. *)
+
+val float : char -> (float -> 'b -> 'b) -> string -> 'b t
+(** Similar to [char] for floating point values. *)
 
 (** {6 Help notes} *)
 
@@ -121,70 +127,72 @@ val note : string -> string -> note
 
 (** {6 Command line processing specifications} *)
 
-type spec
+type 'a spec
 (** The abstract type of command line processing specifications.
 
     Such a specification is made up of flags and notes. *)
 
 val spec :
-  string -> string -> t list -> (string -> unit) -> note list -> spec
+  string -> string -> 'a t list -> (string -> 'a -> 'a) -> note list -> 'a spec
 (** [spec usage description options rest notes] builds an environment
     for command line analysis. *)
 
 
 (** {6 Help screen} *)
 
-val help : spec -> unit
+val help : 'a spec -> unit
 (** Output the help screen associated to the analysis specification
     and terminate the application. *)
 
-val usage : spec -> string -> unit
+val usage : 'a spec -> string -> unit
 (** Output a message and the usage associated to the analysis specification
     and terminate the application with exit code 64. *)
 
 
 (** {6 Parse command options} *)
 
-val parse : spec -> string array -> unit
+val parse : string array -> 'a spec -> 'a -> 'a
 (** [parse] uses an environment to analyse an argument vector. *)
 
-val parse_argv : spec -> unit
+val parse_argv : 'a spec -> 'a -> 'a
 (** This is a specialisation of [parse] to the process arguments
     vector. *)
 
 
 (** {6 Long options} *)
 
-type long_option
+type 'a long_option
 (** The type of long options.  Several long options can be packed
     together to be multiplexed by a traditional short option. *)
 
-val long : char -> long_option list -> string -> t
+val long : char -> 'a long_option list -> string -> 'a t
 (** [long flag longopt_list description] constructs a short option
     multiplexing a load of long options. *)
 
-val long_flag : string -> (unit -> unit) -> long_option
-(** [long_flag name cb] create a long option flag named [name]
-    triggering the callback [cb]. *)
+val long_option : (string -> 'a)  -> string -> ('a -> 'b -> 'b) -> 'b long_option
+(** [long_option of_string name edit] create a long option flag named
+    [name] functionally editing a value of type ['b] with [edit]. *)
 
-val long_char : string -> (char -> unit) -> long_option
-(** [long_flag name cb] create a long optionan argument named [name]
-    requiring a character argument and triggering the callback [cb]. *)
+val long_flag : string -> ('b -> 'b) -> 'b long_option
+(** [long_flag name edit] create a long option flag named [name]
+    functionally editing a value of type ['b] with [edit]. *)
 
-val long_bool : string -> (bool -> unit) -> long_option
+val long_char : string -> (char -> 'b -> 'b) -> 'b long_option
+(** [long_flag name edit] create a long optionan argument named [name]
+    requiring a character argument and functionally editing a value of
+    type ['b] with [edit]. *)
+
+val long_bool : string -> (bool -> 'b -> 'b) -> 'b long_option
 (** Similar to [long_char] for boolean values. *)
 
-val long_string : string -> (string -> unit) -> long_option
+val long_string : string -> (string -> 'b -> 'b) -> 'b long_option
 (** Similar to [long_char] for string values. *)
 
-val long_int : string -> (int -> unit) -> long_option
+val long_int : string -> (int -> 'b -> 'b) -> 'b long_option
 (** Similar to [long_char] for integer values. *)
 
-val long_float : string -> (float -> unit) -> long_option
+val long_float : string -> (float -> 'b -> 'b) -> 'b long_option
 (** Similar to [long_char] for floating point values. *)
-
-val long_concrete : 'a reader -> string -> ('a -> unit) -> long_option
-(** Similar to [long_char] for arbitrary values. *)
 
 
 (** {6 Creating callbacks} *)
@@ -195,8 +203,8 @@ val store : 'a ref -> 'a -> unit
 
 val set : 'a -> 'a ref -> unit -> unit
 (** [set v r ()] is the same as [r := v] and and can be partially evaluated
-    to form a callback. *)
+    to form an editor of the global state [()]. *)
 
-val queue : 'a list ref -> 'a -> unit
+val queue : 'a list ref -> 'a -> unit -> unit
 (** [queue a v] add [v] at the end of [!a]. It can be partially
-    evaluated to form a callback. *)
+    evaluated to form an editor of the global state. *)
