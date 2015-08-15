@@ -1,7 +1,7 @@
-# Getopts, analysing command line arguments for OCaml
+# Getopts, analyse command line arguments for OCaml programs
 
-The **Getopts** projects implements a library to analyse command line
-arguments in OCaml programs.
+The **Getopts** projects implements a library to functionally analyse
+command line arguments in OCaml programs.
 
 [![Build Status](https://travis-ci.org/michipili/getopts.svg?branch=master)](https://travis-ci.org/michipili/getopts?branch=master)
 
