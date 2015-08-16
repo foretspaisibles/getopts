@@ -1,63 +1,13 @@
-Gasoline is an application framework for OCaml, it implements components
-and services which can be used to develop OCaml applications. It
-offers:
+The {b Getopts} projects implements a library to analyse command line
+arguments in OCaml programs.
 
-- Processing of command line arguments
-- A simple and powerful internationalisation-friendly diagnostic facility
-- Analyse of configuration files
-- A cascading system for configuration values, usable to implement
-  site policies Unicode support
-- Stock application patterns, like a Unix filter or a compiler
-
-We call a program using the Gasoline framework a Gasoline guest.
-
-
-{2:testkit The [testkit] library: testing framework}
-
-[testkit] provides testing facilties to implement a testsuite for an
-application.
+It support traditional short options, option clusters, and also long
+options introduced by a special letter, similar to what {b gcc} or
+{b clang} proposes.
 
 {!modules:
-  UnitTest
+  Getopts
 }
-
-
-{3:testkit_blog External articles}
-- {{:https://docs.python.org/2/library/unittest.html} The Python Unit
-  testing framework} which was used as model to implement UnitTest.
-
-
-{2:application The [application] library}
-
-{!modules:
-  SysExits
-  Unicode
-  Getopt
-  CType
-  CMessage
-  CConfigurationMap
-  CApplication
-  ConfigurationMap
-  ConfigurationParser
-  Generic_type
-  Generic_message
-  Generic_diagnostic
-  Generic_asset
-  Generic_component
-  Generic_application
-}
-
-{2:authorkit The [authorkit]}
-
-This small library provides service for authoring, like production of
-simple HTML or SGML files.
-
-{!modules:
-  LoremIpsum
-  WSGML
-  WHTML
-}
-
 {1 Trailer}
 
 {2 Index}
@@ -66,8 +16,4 @@ simple HTML or SGML files.
 
 {2 Authors}
 
-The Gasoline software has been initially written by Michael Grünewald.
-
-{2 Remarks}
-
-- See {{:https://godirepo.camlcity.org/wwwsvn/trunk/code/doc/intro.txt?rev=1852&root=lib-ocamlnet2&view=auto} intro} for an example of an intro file.
+The Getopts software has been initially written by Michael Grünewald.

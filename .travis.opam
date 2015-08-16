@@ -1,0 +1,9 @@
+compiler:
+  - 4.01.0
+  - 4.02.3
+repository:
+  - ocamlfind
+git:
+  - https://github.com/michipili/broken.git
+  - https://github.com/michipili/mixture.git
+  - https://github.com/michipili/lemonade.git

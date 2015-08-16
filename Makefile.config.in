@@ -3,10 +3,10 @@
 # Author: Michael Grünewald
 # Date: Sat Dec 27 11:37:01 CET 2014
 
-# Gasoline (https://github.com/michipili/gasoline)
-# This file is part of Gasoline
+# Getopts (https://github.com/michipili/getopts)
+# This file is part of Getopts
 #
-# Copyright © 2013–2015 Michael Grünewald
+# Copyright © 2008-2015 Michael Grünewald
 #
 # This file must be used under the terms of the CeCILL-B.
 # This source file is licensed as described in the file COPYING, which
