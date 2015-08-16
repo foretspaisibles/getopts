@@ -1,5 +1,5 @@
 name="getopts"
-version="@version@"
+version="@VERSION@"
 description="Analyse command line arguments"
 requires="lemonade"
 archive(byte) = "getopts.cma"
