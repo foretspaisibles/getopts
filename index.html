@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Getopts by michipili</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Getopts</h1>
+        <p>Program arguments analysis for OCaml</p>
+
+        <p class="view"><a href="https://github.com/michipili/getopts">View the Project on GitHub <small>michipili/getopts</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/michipili/getopts/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/michipili/getopts/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/michipili/getopts">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="getopts-analyse-command-line-arguments-for-ocaml-programs" class="anchor" href="#getopts-analyse-command-line-arguments-for-ocaml-programs" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getopts, analyse command line arguments for OCaml programs</h1>
+
+<p>The <strong>Getopts</strong> projects implements a library to functionally analyse
+command line arguments in OCaml programs.</p>
+
+<p><a href="https://travis-ci.org/michipili/getopts?branch=master"><img src="https://travis-ci.org/michipili/getopts.svg?branch=master" alt="Build Status"></a></p>
+
+<p>It support traditional short options, option clusters, and also long
+options introduced by a special letter, similar to what <strong>gcc</strong> or
+<strong>clang</strong> proposes.</p>
+
+<h2>
+<a id="option-clusters" class="anchor" href="#option-clusters" aria-hidden="true"><span class="octicon octicon-link"></span></a>Option clusters</h2>
+
+<p>The <strong>Getopts</strong> module support option clusters, meaning that if <code>-a</code>
+is a command flag and <code>-o</code> and option with an argument, all the
+invocations</p>
+
+<pre><code>cmd -aoarg file file
+cmd -a -o arg file file
+cmd -a -oarg file file
+</code></pre>
+
+<p>are interpreted the same way.</p>
+
+<h2>
+<a id="option-delimiter" class="anchor" href="#option-delimiter" aria-hidden="true"><span class="octicon octicon-link"></span></a>Option delimiter</h2>
+
+<p>The <strong>Getopts</strong> module uses <code>--</code> as an option delimiter, meaning that
+meaning that if <code>-a</code> is a command flag and <code>-o</code> and option with an
+argument then the invocations</p>
+
+<pre><code>cmd -a -oarg -- file file
+cmd -a -oarg file file
+</code></pre>
+
+<p>are equivalent.</p>
+
+<h2>
+<a id="options-with-long-names" class="anchor" href="#options-with-long-names" aria-hidden="true"><span class="octicon octicon-link"></span></a>Options with long names</h2>
+
+<p>GNU style long options are not supported but it is possible to use
+something similar to an option with a long name, in a similar way as
+<strong>gcc</strong> or <strong>clang</strong> does. It is possible to configure <strong>Getopts</strong> so
+that invocations like</p>
+
+<pre><code>cmd -fsyntax-only -fobjc-abi-version=2 -March=hammer
+cmd -f syntax-only -f objc-abi-version=2 -M arch=hammer
+</code></pre>
+
+<p>are easily analysed.</p>
+
+<h2>
+<a id="help-screen" class="anchor" href="#help-screen" aria-hidden="true"><span class="octicon octicon-link"></span></a>Help screen</h2>
+
+<p>The <strong>Getopts</strong> module can automatically prepare and format an help
+screen, similar to this one:</p>
+
+<pre><code>Usage: test_getopts [-avh][-i int][-f float][-b bool][-s string][--][rest]
+ Test the Getopts module
+Options:
+ -h Display available options.
+ -a The a flag.
+ -v The v flag.
+ -b The b option.
+ -c The c option.
+ -s The s option.
+ -i The i option.
+ -f The f option.
+Short Note: This is an example of a short note.
+Long Note:
+ This is an example of a very long note whose contents spans over several
+ lines.  It really has to be that long, so we will write here as much silly
+ text as needed.
+   And we also need several pragraphs of irrelevant text, but believe me,
+ this has nothing to do with you, just with the example.
+</code></pre>
+
+<h2>
+<a id="free-software" class="anchor" href="#free-software" aria-hidden="true"><span class="octicon octicon-link"></span></a>Free software</h2>
+
+<p>It is written by Michael Grünewald and is distributed as a free
+software: copying it  and redistributing it is
+very much welcome under conditions of the <a href="http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html">CeCILL-B</a>
+licence agreement, found in the <a href="COPYING">COPYING</a> and
+<a href="COPYING-FR">COPYING-FR</a> files of the distribution.</p>
+
+<h2>
+<a id="setup-guide" class="anchor" href="#setup-guide" aria-hidden="true"><span class="octicon octicon-link"></span></a>Setup guide</h2>
+
+<p>It is easy to install <strong>Getopts</strong> using <strong>opam</strong> and its <em>pinning</em>
+feature.  In a shell visiting the repository, say</p>
+
+<div class="highlight highlight-console"><pre>% <span class="pl-s1">opam pin add <span class="pl-c1">getopts</span> <span class="pl-c1">.</span></span></pre></div>
+
+<p>It is also possible to install <strong>Getopts</strong> manually.
+The installation procedure is based on the portable build system
+<a href="https://github.com/michipili/bsdowl">BSD Owl Scripts</a> written for BSD Make.</p>
+
+<ol>
+<li>
+<p>Verify that prerequisites are installed:</p>
+
+<ul>
+<li>BSD Make</li>
+<li><a href="https://github.com/michipili/bsdowl/wiki/Install">BSD OWl</a></li>
+<li>OCaml</li>
+<li>GNU Autoconf</li>
+</ul>
+</li>
+<li><p>Get the source, either by cloning the repository or by exploding a
+<a href="releases">distribution tarball</a>.</p></li>
+<li><p>Optionally run <code>autoconf</code> to produce a configuration script. This
+is only required if the script is not already present.</p></li>
+<li><p>Run <code>./configure</code>, you can choose the installation prefix with
+<code>--prefix</code>.</p></li>
+<li><p>Run <code>make build</code>.</p></li>
+<li><p>Optionally run <code>make test</code> to test your build.</p></li>
+<li><p>Finally run <code>make install</code>.</p></li>
+</ol>
+
+<p>Depending on how <strong>BSD Make</strong> is called on your system, you may need to
+replace <code>make</code> by <code>bsdmake</code> or <code>bmake</code> in steps 5, 6, and 7.
+The <strong>GNU Make</strong> program usually give up the ghost, croaking
+<code>*** missing separator. Stop.</code> when you mistakingly use it instead of
+<strong>BSD Make</strong>.</p>
+
+<p>Step 7 requires that you can <code>su -</code> if you are not already <code>root</code>.</p>
+
+<p>Michael Grünewald in Bonn, on October 21, 2014</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/michipili">michipili</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
