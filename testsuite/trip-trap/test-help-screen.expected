@@ -1,14 +1,14 @@
 Usage: test_getopts [-avh][-i int][-f float][-b bool][-s string][--][rest]
  Test the Getopts module
 Options:
- -h Display available options.
  -a The a flag.
- -v The v flag.
  -b The b option.
  -c The c option.
- -s The s option.
- -i The i option.
  -f The f option.
+ -h Display available options.
+ -i The i option.
+ -s The s option.
+ -v The v flag.
 Short Note: This is an example of a short note.
 Long Note:
  This is an example of a very long note whose contents spans over several

@@ -18,8 +18,8 @@ install: [
   ["make"  "-I%{bsdowl:share}%" "install"] {os  = "freebsd"}
 ]
 remove: [
-  ["ocamlfind" "remove" "mixture"]
-  ["rm" "-rf" "%{share}%/doc/mixture"]
+  ["ocamlfind" "remove" "getopts"]
+  ["rm" "-rf" "%{share}%/doc/getopts"]
 ]
 depends: [
   "broken"

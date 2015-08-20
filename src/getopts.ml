@@ -378,7 +378,8 @@ struct
     compose_usage (progname () ^ " " ^ spec.usage) spec.description;
     open_vbox 1;
     print_string "Options:";
-    List.iter compose_option spec.options;
+    List.iter compose_option
+      (List.sort (fun a b -> Pervasives.compare a.option b.option) spec.options);
     close_box();
     List.iter compose_note spec.notes;
     print_cut();
