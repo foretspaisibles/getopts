@@ -27,6 +27,8 @@ TESTS+=			test-char
 TESTS+=			test-string
 TESTS+=			test-rest
 TESTS+=			test-float
+TESTS+=			test-empty-optarg
+TESTS+=			test-empty-rest
 
 ARGS.test-help-screen=	-h
 ARGS.test-cluster=	-avava -avsva
@@ -37,6 +39,8 @@ ARGS.test-char=		-c X
 ARGS.test-string=	-s text
 ARGS.test-float=	-f 0.1
 ARGS.test-rest=		rest1 rest2
+ARGS.test-empty-optarg=	-s '' rest
+ARGS.test-empty-rest=	'' -s '' rest
 
 
 .SUFFIXES: .expected .got
