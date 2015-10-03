@@ -59,7 +59,8 @@ test: do-${test}
 
 .if !target(do-${test})
 do-${test}: ${test}.expected ${test}.got
-	diff -u ${.ALLSRC:M*.expected} ${.ALLSRC:M*.got}
+	diff -u ${.ALLSRC:M*.expected} ${.ALLSRC:M*.got}\
+	  || (rm -f ${.ALLSRC:M*.got}; exit 1)
 .endif
 .endfor
 
