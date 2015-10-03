@@ -125,7 +125,7 @@ struct
         match state.stream with
         | Some('-') :: _ -> junk state >>= read_cluster_enter
         | Some(c) :: _ -> junk state >>= add c >>= read_trail
-        | None :: _ -> junk state >>= maybe_read_cluster
+        | None :: _ -> pack_rest("", state) >>= junk >>= read_rest
         | [] -> Success.return state
       and read_trail state =
         slurp state >>= pack_rest >>= read_rest
@@ -155,6 +155,8 @@ struct
       and read_option_argument c state =
         match state.stream with
         | [] -> error_argument_short c
+        | None :: None :: _ ->
+            pack_option c ("", state) >>= junk >>= junk >>= maybe_read_cluster
         | None :: tl -> junk state >>= read_option_argument c
         | _ -> slurp state >>= pack_option c >>= maybe_read_cluster
       and read_end_of_separator state =
