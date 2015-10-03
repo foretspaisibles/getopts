@@ -1,0 +1,324 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Getopts" rel="Chapter" href="Getopts.html"><link title="How program arguments are read" rel="Section" href="#1_Howprogramargumentsareread">
+<link title="How program arguments are read" rel="Section" href="#1_Howprogramargumentsareread">
+<link title="Traditional flags and options" rel="Subsection" href="#6_Traditionalflagsandoptions">
+<link title="Help notes" rel="Subsection" href="#6_Helpnotes">
+<link title="Command line processing specifications" rel="Subsection" href="#6_Commandlineprocessingspecifications">
+<link title="Help screen" rel="Subsection" href="#6_Helpscreen">
+<link title="Parse command options" rel="Subsection" href="#6_Parsecommandoptions">
+<link title="Long options" rel="Subsection" href="#6_Longoptions">
+<link title="Creating callbacks" rel="Subsection" href="#6_Creatingcallbacks">
+<title>Getopts library : Getopts</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_Getopts.html">Getopts</a></h1>
+
+<pre><span class="keyword">module</span> Getopts: <code class="code">sig</code> <a href="Getopts.html">..</a> <code class="code">end</code></pre><div class="info module top">
+Program arguments analysis.
+<p>
+
+    The <code class="code">Getopts</code> module is used to break up options in command lines and
+    interpret them.  It supports the canonical UNIX convention, long
+    options and long arguments.<br>
+</div>
+<hr width="100%">
+<br>
+<h1 id="1_Howprogramargumentsareread">How program arguments are read</h1>
+<p>
+
+    In this module, the argument vector passed to the process by
+    <i>execve(2)</i> is broken up into the following pieces: the executable
+    name, the sequence of flags and options, then the sequence of main
+    arguments.
+<p>
+
+    Instead of giving a formal definition of the rules used to analyze
+    the command line, we illustrate it agains a few examples. We
+    assume that the program accepts the flags <code class="code">'h'</code>, <code class="code">'v'</code> and <code class="code">'a'</code>,
+    and the options <code class="code">'o'</code> and <code class="code">'m'</code>. Now let us see how some arguments
+    vectors are broken up into pieces:
+<p>
+<ul>
+<li><code class="code">program -v -o output input</code> is understood as <i>the flag v </i>,
+    <i>the option o with the argument "output"</i> and
+    <i>the rest argument "input"</i>;</li>
+</ul>
+<ul>
+<li><code class="code">program -vo output input</code> and <code class="code">program -vooutput input</code> are
+    analyzed the same way, since flag clustering is allowed;</li>
+</ul>
+<ul>
+<li><code class="code">program -ovoutput input</code> is understood as <i>the option o with
+    the argument "voutput"</i> and <i>the main argument "input"</i>.</li>
+</ul>
+
+    Some programs, as <b>gcc</b> or <b>clang</b>, use a flag to introduce
+    <i>key/value</i> style options, as in
+    <code class="code">clang -march=CPU -mmacosx-version-min=10.6</code>.  This scheme is also
+    supported by this module, see <i>long options</i>.
+<p>
+
+    While the procedures defined in this module allows a program to deal
+    with its argument as most of the UNIX programs do, there is many
+    schemes not supported by it. Among these are
+<p>
+<ul>
+<li><b>tar</b> style, where flags and options are grouped together and
+    the arguments come later;</li>
+</ul>
+<ul>
+<li><b>sox</b> style, where options affect only the file preceding them;</li>
+</ul>
+<ul>
+<li><b>svn</b> style, where the svn program multiplexes many programs in
+      one.</li>
+</ul>
+<br>
+<br>
+<h1 id="1_Howprogramargumentsareread">How program arguments are read</h1>
+<p>
+
+    In this module, the argument vector passed to the process by
+    <i>execve(2)</i> is broken up into the following pieces: the executable
+    name, the sequence of flags and options, then the sequence of main
+    arguments.
+<p>
+
+    Instead of giving a formal definition of the rules used to analyze
+    the command line, we illustrate it agains a few examples. We
+    assume that the program accepts the flags <code class="code">'h'</code>, <code class="code">'v'</code> and <code class="code">'a'</code>,
+    and the options <code class="code">'o'</code> and <code class="code">'m'</code>. Now let us see how some arguments
+    vectors are broken up into pieces:
+<p>
+<ul>
+<li><code class="code">program -v -o output input</code> is understood as <i>the flag v </i>,
+    <i>the option o with the argument "output"</i> and
+    <i>the rest argument "input"</i>;</li>
+</ul>
+<ul>
+<li><code class="code">program -vo output input</code> and <code class="code">program -vooutput input</code> are
+    analyzed the same way, since flag clustering is allowed;</li>
+</ul>
+<ul>
+<li><code class="code">program -ovoutput input</code> is understood as <i>the option o with
+    the argument "voutput"</i> and <i>the main argument "input"</i>.</li>
+</ul>
+
+    Some programs, as <b>gcc</b> or <b>clang</b>, use a flag to introduce
+    <i>key/value</i> style options, as in
+    <code class="code">clang -march=CPU -mmacosx-version-min=10.6</code>.  This scheme is also
+    supported by this module, see <i>long options</i>.
+<p>
+
+    While the procedures defined in this module allows a program to deal
+    with its argument as most of the UNIX programs do, there is many
+    schemes not supported by it. Among these are
+<p>
+<ul>
+<li><b>tar</b> style, where flags and options are grouped together and
+    the arguments come later;</li>
+</ul>
+<ul>
+<li><b>sox</b> style, where options affect only the file preceding them;</li>
+</ul>
+<ul>
+<li><b>svn</b> style, where the svn program multiplexes many programs in
+      one.</li>
+</ul>
+<br>
+<br>
+<h6 id="6_Traditionalflagsandoptions">Traditional flags and options</h6><br>
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type">'a</code> t</span> </pre>
+<div class="info ">
+<em>That getopts thingie</em> <code class="code">t</code> represents a flag or an option
+    functionally modifying a value of type <code class="code">'a</code>.
+<p>
+
+    Values of this type are created by the functions
+    <code class="code">flag</code>, <code class="code">char</code>, <code class="code">bool</code>, <code class="code">string</code>, <code class="code">int</code> and <code class="code">float</code> hereafter, their
+    variants <code class="code">set_flag</code>, <code class="code">set_char</code>, <code class="code">set_bool</code>, <code class="code">set_string</code>, <code class="code">set_int</code>
+    and <code class="code">set_float</code>, and the <code class="code">long</code> forging long options.<br>
+</div>
+
+
+<pre><span id="VALxmap"><span class="keyword">val</span> xmap</span> : <code class="type">('a -> 'b) -> ('b -> 'a -> 'a) -> 'b <a href="Getopts.html#TYPEt">t</a> -> 'a <a href="Getopts.html#TYPEt">t</a></code></pre><div class="info ">
+<code class="code">xmap get set option</code> convert an option functionally modifying a
+    value of type <code class="code">'b</code> in an option functionally modifying a value of type
+    <code class="code">'b</code>.  This can be used in conjunction with lenses to separately
+    configure the different modules of an application.<br>
+</div>
+
+<pre><span id="VALoption"><span class="keyword">val</span> option</span> : <code class="type">(string -> 'a) -> char -> ('a -> 'b -> 'b) -> string -> 'b <a href="Getopts.html#TYPEt">t</a></code></pre><div class="info ">
+<code class="code">option of_string c edit d</code> constructs a <code class="code">t</code> that handles the
+    option denoted by <code class="code">c</code>. This options has a <code class="code">'a</code> value as argument
+    converted from the given string by <code class="code">of_string</code>.  When this option
+    occurs in the command line, the function <code class="code">edit</code> is used to
+    functionally edit program parameters. The message <code class="code">d</code> may be
+    displayed in the help screen of the program.
+<p>
+
+    The <code class="code">of_string</code>
+    function can raise <code class="code">Failure</code> (preferred) or <code class="code">Invalid_arg</code> to indicate
+    an ill-formed input.<br>
+</div>
+
+<pre><span id="VALflag"><span class="keyword">val</span> flag</span> : <code class="type">char -> ('b -> 'b) -> string -> 'b <a href="Getopts.html#TYPEt">t</a></code></pre><div class="info ">
+<code class="code">char c edit d</code> constructs a <code class="code">t</code> that handles the flag denoted by
+    <code class="code">c</code>. When this flag occurs in the command line, the function
+    <code class="code">edit</code> is used to functionally edit the program parameters. The
+    message <code class="code">d</code> may be displayed in the help screen of the program.<br>
+</div>
+
+<pre><span id="VALchar"><span class="keyword">val</span> char</span> : <code class="type">char -> (char -> 'b -> 'b) -> string -> 'b <a href="Getopts.html#TYPEt">t</a></code></pre><div class="info ">
+<code class="code">char c f d</code> constructs a <code class="code">t</code> that handles the option denoted by
+    <code class="code">c</code>. This options has a <code class="code">char</code> value as argument. When this option
+    occurs in the command line, the function <code class="code">edit</code> is used to
+    functionally edit program parameters. The message <code class="code">d</code> may be
+    displayed in the help screen of the program.<br>
+</div>
+
+<pre><span id="VALbool"><span class="keyword">val</span> bool</span> : <code class="type">char -> (bool -> 'b -> 'b) -> string -> 'b <a href="Getopts.html#TYPEt">t</a></code></pre><div class="info ">
+Similar to <code class="code">char</code> for boolean values.<br>
+</div>
+
+<pre><span id="VALstring"><span class="keyword">val</span> string</span> : <code class="type">char -> (string -> 'b -> 'b) -> string -> 'b <a href="Getopts.html#TYPEt">t</a></code></pre><div class="info ">
+Similar to <code class="code">char</code> for string values.<br>
+</div>
+
+<pre><span id="VALint"><span class="keyword">val</span> int</span> : <code class="type">char -> (int -> 'b -> 'b) -> string -> 'b <a href="Getopts.html#TYPEt">t</a></code></pre><div class="info ">
+Similar to <code class="code">char</code> for integer values.<br>
+</div>
+
+<pre><span id="VALfloat"><span class="keyword">val</span> float</span> : <code class="type">char -> (float -> 'b -> 'b) -> string -> 'b <a href="Getopts.html#TYPEt">t</a></code></pre><div class="info ">
+Similar to <code class="code">char</code> for floating point values.<br>
+</div>
+<br>
+<h6 id="6_Helpnotes">Help notes</h6><br>
+
+<pre><span id="TYPEnote"><span class="keyword">type</span> <code class="type"></code>note</span> </pre>
+<div class="info ">
+A <code class="code">note</code> is a message that shall be displayed when the user asks
+    for the help screen of the program. Such a message has a title and a
+    body, which is broken down into paragraphs.<br>
+</div>
+
+
+<pre><span id="VALnote"><span class="keyword">val</span> note</span> : <code class="type">string -> string -> <a href="Getopts.html#TYPEnote">note</a></code></pre><div class="info ">
+<code class="code">note title body</code> constructs a <code class="code">note</code>. In the <code class="code">body</code>, paragraphs
+    are separated by end-of-line characters.<br>
+</div>
+<br>
+<h6 id="6_Commandlineprocessingspecifications">Command line processing specifications</h6><br>
+
+<pre><span id="TYPEspec"><span class="keyword">type</span> <code class="type">'a</code> spec</span> </pre>
+<div class="info ">
+The abstract type of command line processing specifications.
+<p>
+
+    Such a specification is made up of flags and notes.<br>
+</div>
+
+
+<pre><span id="VALspec"><span class="keyword">val</span> spec</span> : <code class="type">string -><br>       string -><br>       'a <a href="Getopts.html#TYPEt">t</a> list -><br>       (string -> 'a -> 'a) -> <a href="Getopts.html#TYPEnote">note</a> list -> 'a <a href="Getopts.html#TYPEspec">spec</a></code></pre><div class="info ">
+<code class="code">spec usage description options rest notes</code> builds an environment
+    for command line analysis.<br>
+</div>
+<br>
+<h6 id="6_Helpscreen">Help screen</h6><br>
+
+<pre><span id="VALhelp"><span class="keyword">val</span> help</span> : <code class="type">'a <a href="Getopts.html#TYPEspec">spec</a> -> unit</code></pre><div class="info ">
+Output the help screen associated to the analysis specification
+    and terminate the application.<br>
+</div>
+
+<pre><span id="VALusage"><span class="keyword">val</span> usage</span> : <code class="type">'a <a href="Getopts.html#TYPEspec">spec</a> -> string -> unit</code></pre><div class="info ">
+Output a message and the usage associated to the analysis specification
+    and terminate the application with exit code 64.<br>
+</div>
+<br>
+<h6 id="6_Parsecommandoptions">Parse command options</h6><br>
+
+<pre><span id="VALparse"><span class="keyword">val</span> parse</span> : <code class="type">string array -> 'a <a href="Getopts.html#TYPEspec">spec</a> -> 'a -> 'a</code></pre><div class="info ">
+<code class="code">parse</code> uses an environment to analyse an argument vector.<br>
+</div>
+
+<pre><span id="VALparse_argv"><span class="keyword">val</span> parse_argv</span> : <code class="type">'a <a href="Getopts.html#TYPEspec">spec</a> -> 'a -> 'a</code></pre><div class="info ">
+This is a specialisation of <code class="code">parse</code> to the process arguments
+    vector.<br>
+</div>
+<br>
+<h6 id="6_Longoptions">Long options</h6><br>
+
+<pre><span id="TYPElong_option"><span class="keyword">type</span> <code class="type">'a</code> long_option</span> </pre>
+<div class="info ">
+The type of long options.  Several long options can be packed
+    together to be multiplexed by a traditional short option.<br>
+</div>
+
+
+<pre><span id="VALlong"><span class="keyword">val</span> long</span> : <code class="type">char -> 'a <a href="Getopts.html#TYPElong_option">long_option</a> list -> string -> 'a <a href="Getopts.html#TYPEt">t</a></code></pre><div class="info ">
+<code class="code">long flag longopt_list description</code> constructs a short option
+    multiplexing a load of long options.<br>
+</div>
+
+<pre><span id="VALlong_option"><span class="keyword">val</span> long_option</span> : <code class="type">(string -> 'a) -> string -> ('a -> 'b -> 'b) -> 'b <a href="Getopts.html#TYPElong_option">long_option</a></code></pre><div class="info ">
+<code class="code">long_option of_string name edit</code> create a long option flag named
+    <code class="code">name</code> functionally editing a value of type <code class="code">'b</code> with <code class="code">edit</code>.<br>
+</div>
+
+<pre><span id="VALlong_flag"><span class="keyword">val</span> long_flag</span> : <code class="type">string -> ('b -> 'b) -> 'b <a href="Getopts.html#TYPElong_option">long_option</a></code></pre><div class="info ">
+<code class="code">long_flag name edit</code> create a long option flag named <code class="code">name</code>
+    functionally editing a value of type <code class="code">'b</code> with <code class="code">edit</code>.<br>
+</div>
+
+<pre><span id="VALlong_char"><span class="keyword">val</span> long_char</span> : <code class="type">string -> (char -> 'b -> 'b) -> 'b <a href="Getopts.html#TYPElong_option">long_option</a></code></pre><div class="info ">
+<code class="code">long_flag name edit</code> create a long optionan argument named <code class="code">name</code>
+    requiring a character argument and functionally editing a value of
+    type <code class="code">'b</code> with <code class="code">edit</code>.<br>
+</div>
+
+<pre><span id="VALlong_bool"><span class="keyword">val</span> long_bool</span> : <code class="type">string -> (bool -> 'b -> 'b) -> 'b <a href="Getopts.html#TYPElong_option">long_option</a></code></pre><div class="info ">
+Similar to <code class="code">long_char</code> for boolean values.<br>
+</div>
+
+<pre><span id="VALlong_string"><span class="keyword">val</span> long_string</span> : <code class="type">string -> (string -> 'b -> 'b) -> 'b <a href="Getopts.html#TYPElong_option">long_option</a></code></pre><div class="info ">
+Similar to <code class="code">long_char</code> for string values.<br>
+</div>
+
+<pre><span id="VALlong_int"><span class="keyword">val</span> long_int</span> : <code class="type">string -> (int -> 'b -> 'b) -> 'b <a href="Getopts.html#TYPElong_option">long_option</a></code></pre><div class="info ">
+Similar to <code class="code">long_char</code> for integer values.<br>
+</div>
+
+<pre><span id="VALlong_float"><span class="keyword">val</span> long_float</span> : <code class="type">string -> (float -> 'b -> 'b) -> 'b <a href="Getopts.html#TYPElong_option">long_option</a></code></pre><div class="info ">
+Similar to <code class="code">long_char</code> for floating point values.<br>
+</div>
+<br>
+<h6 id="6_Creatingcallbacks">Creating callbacks</h6><br>
+
+<pre><span id="VALstore"><span class="keyword">val</span> store</span> : <code class="type">'a Pervasives.ref -> 'a -> unit</code></pre><div class="info ">
+<code class="code">store r v</code> is the same as <code class="code">r := v</code> and can be partially evaluated
+    to form a callback.<br>
+</div>
+
+<pre><span id="VALset"><span class="keyword">val</span> set</span> : <code class="type">'a -> 'a Pervasives.ref -> unit -> unit</code></pre><div class="info ">
+<code class="code">set v r ()</code> is the same as <code class="code">r := v</code> and and can be partially evaluated
+    to form an editor of the global state <code class="code">()</code>.<br>
+</div>
+
+<pre><span id="VALqueue"><span class="keyword">val</span> queue</span> : <code class="type">'a list Pervasives.ref -> 'a -> unit -> unit</code></pre><div class="info ">
+<code class="code">queue a v</code> add <code class="code">v</code> at the end of <code class="code">!a</code>. It can be partially
+    evaluated to form an editor of the global state.<br>
+</div>
+</body></html>
