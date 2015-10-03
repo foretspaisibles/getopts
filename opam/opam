@@ -1,4 +1,5 @@
 opam-version: "1.2"
+version: "0.3.1-current"
 maintainer: "michipili@gmail.com"
 authors: "Michael Grünewald"
 license: "CeCILL-B"
@@ -6,7 +7,8 @@ homepage: "https://github.com/michipili/getopts"
 bug-reports: "https://github.com/michipili/getopts/issues"
 dev-repo: "https://github.com/michipili/getopts.git"
 tags: [
-  "pattern"
+  "cli"
+  "system"
 ]
 build: [
   ["./configure" "--prefix" prefix]
@@ -22,9 +24,9 @@ remove: [
   ["rm" "-rf" "%{share}%/doc/getopts"]
 ]
 depends: [
-  "broken"
+  "broken" {>= "0.4.2"}
   "bsdowl" {>= "3.0.0"}
-  "lemonade"
+  "lemonade" {>= "0.2.1"}
   "ocamlfind"
 ]
 depexts: [
