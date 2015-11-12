@@ -88,6 +88,7 @@ It is easy to install **Getopts** using **opam** and its *pinning*
 feature.  In a shell visiting the repository, say
 
 ```console
+% autoconf
 % opam pin add getopts .
 ```
 
