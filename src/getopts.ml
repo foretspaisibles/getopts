@@ -381,7 +381,8 @@ struct
     open_vbox 1;
     print_string "Options:";
     List.iter compose_option
-      (List.sort (fun a b -> Pervasives.compare a.option b.option) spec.options);
+      (List.sort (fun a b -> Pervasives.compare a.option b.option)
+         (List.filter (fun opt -> opt.help <> "") spec.options));
     close_box();
     List.iter compose_note spec.notes;
     print_cut();
