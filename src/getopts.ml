@@ -22,7 +22,7 @@ module Success =
 (* Error messages *)
 
 let error fmt =
-  ksprintf Success.throw fmt
+  ksprintf Success.error fmt
 
 let error_illegal_short c =
   error "illegal option -- %s" (Char.escaped c)
@@ -109,7 +109,7 @@ struct
   let junk state =
     match state.stream with
     | _ :: tl -> Success.return({ state with stream = tl })
-    | [] -> Success.throw "Getopts.Parser.junk"
+    | [] -> error "Getopts.Parser.junk"
 
   let slurp state =
     let word, stream = wordlist_readword state.buffer state.stream in
@@ -207,7 +207,7 @@ let convert_short c of_string s =
   with
   | Invalid_argument(mesg)
   | Failure(mesg) -> error_convert_short c s mesg
-  | _ -> Success.throw "Getopts.convert_short"
+  | _ -> error "Getopts.convert_short"
 (* It is not permitted to of_string to throw something other than a
    failure or an invalid argument. *)
 
@@ -437,7 +437,7 @@ let help_flag = {
   option = 'h';
   wants_arg = false;
   help = "Display available options.";
-  edit = (fun _ -> Success.throw "")
+  edit = (fun _ -> error "")
 }
 
 let maybe_add_help spec =
@@ -494,7 +494,7 @@ let convert_long c name of_string s =
   with
   | Invalid_argument(mesg)
   | Failure(mesg) -> error_convert_long c name mesg s
-  | _ -> Success.throw "Getopts.supervise_convert_long"
+  | _ -> error "Getopts.supervise_convert_long"
 (* It is not permitted to of_string to throw something other than a
    failure or an invalid argument. *)
 
