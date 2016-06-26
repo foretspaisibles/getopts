@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "0.3.3"
+version: "0.4.0"
 maintainer: "michipili@gmail.com"
 authors: "Michael Grünewald"
 license: "CeCILL-B"
@@ -12,25 +12,22 @@ tags: [
 ]
 build: [
   ["./configure" "--prefix" prefix]
-  ["bmake" "-I%{bsdowl:share}%" "all"] {os != "freebsd"}
-  ["make"  "-I%{bsdowl:share}%" "all"] {os  = "freebsd"}
+  [conf-bmake:path "-I%{bsdowl:share}%" "all"]
 ]
 install: [
-  ["bmake" "-I%{bsdowl:share}%" "install"] {os != "freebsd"}
-  ["make"  "-I%{bsdowl:share}%" "install"] {os  = "freebsd"}
+  [conf-bmake:path "-I%{bsdowl:share}%" "install"]
 ]
 remove: [
   ["ocamlfind" "remove" "getopts"]
   ["rm" "-rf" "%{share}%/doc/getopts"]
 ]
+available: [
+  ocaml-version >= "4.02.3"
+]
 depends: [
+  "conf-bmake"
   "broken" {>= "0.4.2"}
   "bsdowl" {>= "3.0.0"}
-  "lemonade" {>= "0.2.1"}
+  "lemonade" {>= "0.4.0"}
   "ocamlfind"
-]
-depexts: [
-  [["debian"] ["bmake"]]
-  [["ubuntu"] ["bmake"]]
-  [["osx" "macports"] ["bmake"]]
 ]

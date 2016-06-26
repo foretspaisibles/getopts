@@ -15,5 +15,5 @@ cache:
   - ${HOME}/.local
   - ${HOME}/.opam
 env:
-  - TRAVIS_OCAML_VERSION=4.01.0
   - TRAVIS_OCAML_VERSION=4.02.3
+  - TRAVIS_OCAML_VERSION=4.03.0
