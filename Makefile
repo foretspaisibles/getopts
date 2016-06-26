@@ -15,7 +15,7 @@
 # http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.txt
 
 PACKAGE=		getopts
-VERSION=		0.3.3-current
+VERSION=		0.4.0-releng
 OFFICER=		michipili@gmail.com
 
 MODULE=			ocaml.lib:src
