@@ -23,6 +23,9 @@ remove: [
   ["ocamlfind" "remove" "getopts"]
   ["rm" "-rf" "%{share}%/doc/getopts"]
 ]
+available: [
+  ocaml-version >= "4.02.3"
+]
 depends: [
   "broken" {>= "0.4.2"}
   "bsdowl" {>= "3.0.0"}
